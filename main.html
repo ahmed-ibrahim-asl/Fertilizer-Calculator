@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Fertilizer Calculator</title>
+  <!-- Example using Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    /* Base styling */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Open Sans', sans-serif;
+    }
+    body {
+      background: linear-gradient(to top right, #e0f7fa 0%, #e1f5fe 100%);
+      color: #333;
+      padding: 2rem;
+    }
+    h1, h2, h3 {
+      margin-bottom: 0.5rem;
+    }
+    h1 {
+      font-weight: 600;
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    /* Container */
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      padding: 2rem;
+    }
+
+    /* Section title */
+    .section-title {
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #444;
+      border-bottom: 2px solid #ddd;
+      padding-bottom: 0.5rem;
+    }
+
+    /* Form styling */
+    form {
+      display: flex;
+      flex-direction: column;
+    }
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    .label-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 0.3rem;
+    }
+    .label-row label {
+      font-weight: 600;
+      margin-right: 0.5rem;
+    }
+    .label-row .param-note {
+      font-size: 0.85rem;
+      color: #777;
+      flex: 1 0 auto;
+      margin-left: 0.5rem;
+    }
+    input[type="number"] {
+      width: 100%;
+      max-width: 300px;
+      padding: 0.5rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 1rem;
+    }
+    input[type="number"]:focus {
+      outline: none;
+      border-color: #007BFF;
+    }
+    .description {
+      font-size: 0.85rem;
+      color: #555;
+      margin-top: 0.3rem;
+      line-height: 1.4;
+    }
+
+    /* Buttons */
+    .btn-container {
+      margin-top: 1.5rem;
+    }
+    .btn {
+      display: inline-block;
+      background: #007BFF;
+      color: #fff;
+      text-decoration: none;
+      padding: 0.6rem 1rem;
+      border-radius: 4px;
+      font-size: 1rem;
+      border: none;
+      cursor: pointer;
+      margin-right: 1rem;
+      transition: background 0.2s ease-in-out;
+    }
+    .btn:hover {
+      background: #0056b3;
+    }
+    .btn.reset {
+      background: #6c757d;
+    }
+    .btn.reset:hover {
+      background: #565e64;
+    }
+
+    /* Error messages */
+    .error {
+      color: #dc3545;
+      font-size: 0.85rem;
+      margin-top: 0.25rem;
+      display: none;
+    }
+    .error.show {
+      display: block;
+    }
+
+    /* Results area */
+    .results {
+      margin-top: 2rem;
+      padding: 1.5rem;
+      background: #fafafa;
+      border-left: 4px solid #007BFF;
+      display: none;
+      border-radius: 4px;
+    }
+    .results p {
+      margin: 0.5rem 0;
+      font-size: 1rem;
+    }
+    .results strong {
+      color: #007BFF;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Fertilizer Calculator</h1>
+
+  <div class="container">
+    <form id="fertilizerForm">
+      <!-- General Inputs -->
+      <div class="section-title">General Inputs</div>
+
+      <!-- Target Yield (Y) -->
+      <div class="form-group">
+        <div class="label-row">
+          <label for="yield">Target Yield (Y):</label>
+          <span class="param-note">(e.g., 50)</span>
+        </div>
+        <input
+          type="number"
+          id="yield"
+          name="yield"
+          step="0.01"
+          min="0"
+          placeholder="Enter target yield in kg/ha"
+          required
+        />
+        <div class="description">
+          The target yield (Y) is your desired crop yield in kg/ha (or another standard unit).
+        </div>
+        <div class="error" id="yieldError">
+          Please enter a realistic yield &gt; 0 (e.g., 10 to 200).
+        </div>
+      </div>
+
+      <!-- Nitrogen (N) Inputs -->
+      <div class="section-title">Nitrogen (N) Parameters</div>
+
+      <div class="form-group">
+        <div class="label-row">
+          <label for="nrN">N Required Ratio (NR<sub>N</sub>):</label>
+          <span class="param-note">(e.g., 2)</span>
+        </div>
+        <input
+          type="number"
+          id="nrN"
+          name="nrN"
+          step="0.01"
+          min="0"
+          placeholder="N ratio for target yield"
+          required
+        />
+        <div class="description">
+          NR<sub>N</sub> represents how much nitrogen is typically required per unit of yield. Ranges often fall between 0.5 – 3.0 depending on the crop.
+        </div>
+        <div class="error" id="nrNError">
+          Please enter a realistic value &gt; 0 (e.g., between 0.1 and 5).
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="label-row">
+          <label for="efN">N Efficiency Factor (E<sub>fN</sub>):</label>
+          <span class="param-note">(0 &lt;= E<sub>fN</sub> &lt;= 1)</span>
+        </div>
+        <input
+          type="number"
+          id="efN"
+          name="efN"
+          step="0.01"
+          min="0"
+          max="1"
+          placeholder="Between 0 and 1"
+          required
+        />
+        <div class="description">
+          E<sub>fN</sub> indicates the efficiency of nitrogen uptake, influenced by soil conditions, climate, etc.
+        </div>
+        <div class="error" id="efNError">
+          N Efficiency Factor must be between 0 and 1 (e.g., 0.3, 0.45, 0.8).
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="label-row">
+          <label for="esN">Soil Contribution Factor (E<sub>sN</sub>):</label>
+          <span class="param-note">(0 &lt;= E<sub>sN</sub> &lt;= 1)</span>
+        </div>
+        <input
+          type="number"
+          id="esN"
+          name="esN"
+          step="0.01"
+          min="0"
+          max="1"
+          placeholder="Between 0 and 1"
+          required
+        />
+        <div class="description">
+          E<sub>sN</sub> is how much your soil naturally contributes to nitrogen availability (e.g., 0.2).
+        </div>
+        <div class="error" id="esNError">
+          Soil Contribution Factor must be between 0 and 1.
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="label-row">
+          <label for="snN">N Soil Test Value (SN<sub>N</sub>):</label>
+          <span class="param-note">(e.g., 20)</span>
+        </div>
+        <input
+          type="number"
+          id="snN"
+          name="snN"
+          step="0.01"
+          min="0"
+          placeholder="N soil test value"
+          required
+        />
+        <div class="description">
+          SN<sub>N</sub> is your nitrogen soil test result (e.g., 15 – 40). It helps determine how much N is already available.
+        </div>
+        <div class="error" id="snNError">
+          Please enter a realistic soil test value &ge; 0.
+        </div>
+      </div>
+
+      <!-- Phosphorus (P) Inputs -->
+      <div class="section-title">Phosphorus (P) Parameters</div>
+
+      <div class="form-group">
+        <div class="label-row">
+          <label for="nrP">P Required Ratio (NR<sub>P</sub>):</label>
+          <span class="param-note">(e.g., 0.6)</span>
+        </div>
+        <input
+          type="number"
+          id="nrP"
+          name="nrP"
+          step="0.01"
+          min="0"
+          placeholder="P ratio for target yield"
+          required
+        />
+        <div class="description">
+          NR<sub>P</sub> is the phosphorus ratio per yield unit, typically ranges from 0.1 – 1.0 depending on crop demands.
+        </div>
+        <div class="error" id="nrPError">
+          Please enter a realistic value &gt; 0 (e.g., 0.1 to 2).
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="label-row">
+          <label for="efP">P Efficiency Factor (E<sub>fP</sub>):</label>
+          <span class="param-note">(0 &lt;= E<sub>fP</sub> &lt;= 1)</span>
+        </div>
+        <input
+          type="number"
+          id="efP"
+          name="efP"
+          step="0.01"
+          min="0"
+          max="1"
+          placeholder="Between 0 and 1"
+          required
+        />
+        <div class="description">
+          E<sub>fP</sub> indicates how effectively phosphorus is taken up by crops under your conditions.
+        </div>
+        <div class="error" id="efPError">
+          P Efficiency Factor must be between 0 and 1.
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="label-row">
+          <label for="esP">Soil Contribution Factor (E<sub>sP</sub>):</label>
+          <span class="param-note">(0 &lt;= E<sub>sP</sub> &lt;= 1)</span>
+        </div>
+        <input
+          type="number"
+          id="esP"
+          name="esP"
+          step="0.01"
+          min="0"
+          max="1"
+          placeholder="Between 0 and 1"
+          required
+        />
+        <div class="description">
+          E<sub>sP</sub> is how much phosphorus your soil can naturally supply.
+        </div>
+        <div class="error" id="esPError">
+          Soil Contribution Factor must be between 0 and 1.
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="label-row">
+          <label for="snP">P Soil Test Value (SN<sub>P</sub>):</label>
+          <span class="param-note">(e.g., 15)</span>
+        </div>
+        <input
+          type="number"
+          id="snP"
+          name="snP"
+          step="0.01"
+          min="0"
+          placeholder="P soil test value"
+          required
+        />
+        <div class="description">
+          SN<sub>P</sub> is your soil test reading for phosphorus (e.g., 5 – 30), guiding how much P is already present.
+        </div>
+        <div class="error" id="snPError">
+          Please enter a realistic soil test value &ge; 0.
+        </div>
+      </div>
+
+      <!-- Potassium (K) Inputs -->
+      <div class="section-title">Potassium (K) Parameters</div>
+
+      <div class="form-group">
+        <div class="label-row">
+          <label for="nrK">K Required Ratio (NR<sub>K</sub>):</label>
+          <span class="param-note">(e.g., 1)</span>
+        </div>
+        <input
+          type="number"
+          id="nrK"
+          name="nrK"
+          step="0.01"
+          min="0"
+          placeholder="K ratio for target yield"
+          required
+        />
+        <div class="description">
+          NR<sub>K</sub> is the potassium ratio per yield unit, which could be from 0.3 – 2.0 for many crops.
+        </div>
+        <div class="error" id="nrKError">
+          Please enter a realistic value &gt; 0 (e.g., 0.3 to 5).
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="label-row">
+          <label for="efK">K Efficiency Factor (E<sub>fK</sub>):</label>
+          <span class="param-note">(0 &lt;= E<sub>fK</sub> &lt;= 1)</span>
+        </div>
+        <input
+          type="number"
+          id="efK"
+          name="efK"
+          step="0.01"
+          min="0"
+          max="1"
+          placeholder="Between 0 and 1"
+          required
+        />
+        <div class="description">
+          E<sub>fK</sub> indicates how efficiently potassium is used by your crops under local conditions.
+        </div>
+        <div class="error" id="efKError">
+          K Efficiency Factor must be between 0 and 1.
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="label-row">
+          <label for="esK">Soil Contribution Factor (E<sub>sK</sub>):</label>
+          <span class="param-note">(0 &lt;= E<sub>sK</sub> &lt;= 1)</span>
+        </div>
+        <input
+          type="number"
+          id="esK"
+          name="esK"
+          step="0.01"
+          min="0"
+          max="1"
+          placeholder="Between 0 and 1"
+          required
+        />
+        <div class="description">
+          E<sub>sK</sub> is the natural potassium supply capacity of your soil.
+        </div>
+        <div class="error" id="esKError">
+          Soil Contribution Factor must be between 0 and 1.
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="label-row">
+          <label for="snK">K Soil Test Value (SN<sub>K</sub>):</label>
+          <span class="param-note">(e.g., 40)</span>
+        </div>
+        <input
+          type="number"
+          id="snK"
+          name="snK"
+          step="0.01"
+          min="0"
+          placeholder="K soil test value"
+          required
+        />
+        <div class="description">
+          SN<sub>K</sub> is your soil test reading for potassium (e.g., 30 – 100).
+        </div>
+        <div class="error" id="snKError">
+          Please enter a realistic soil test value &ge; 0.
+        </div>
+      </div>
+
+      <div class="btn-container">
+        <button type="button" class="btn" id="calculateBtn">Calculate</button>
+        <button type="reset" class="btn reset" id="resetBtn">Reset</button>
+      </div>
+    </form>
+
+    <div class="results" id="resultsBox">
+      <h2>Calculation Results</h2>
+      <p><strong>Nitrogen (N) Fertilizer Needed:</strong> <span id="nResult"></span> kg/ha</p>
+      <p><strong>Phosphorus (P) Fertilizer Needed:</strong> <span id="pResult"></span> kg/ha</p>
+      <p><strong>Potassium (K) Fertilizer Needed:</strong> <span id="kResult"></span> kg/ha</p>
+    </div>
+  </div>
+
+  <script>
+    // Grab elements
+    const form = document.getElementById('fertilizerForm');
+    const calculateBtn = document.getElementById('calculateBtn');
+    const resultsBox = document.getElementById('resultsBox');
+
+    // General
+    const yieldInput = document.getElementById('yield');
+    const yieldError = document.getElementById('yieldError');
+
+    // Nitrogen
+    const nrN = document.getElementById('nrN');
+    const nrNError = document.getElementById('nrNError');
+    const efN = document.getElementById('efN');
+    const efNError = document.getElementById('efNError');
+    const esN = document.getElementById('esN');
+    const esNError = document.getElementById('esNError');
+    const snN = document.getElementById('snN');
+    const snNError = document.getElementById('snNError');
+
+    // Phosphorus
+    const nrP = document.getElementById('nrP');
+    const nrPError = document.getElementById('nrPError');
+    const efP = document.getElementById('efP');
+    const efPError = document.getElementById('efPError');
+    const esP = document.getElementById('esP');
+    const esPError = document.getElementById('esPError');
+    const snP = document.getElementById('snP');
+    const snPError = document.getElementById('snPError');
+
+    // Potassium
+    const nrK = document.getElementById('nrK');
+    const nrKError = document.getElementById('nrKError');
+    const efK = document.getElementById('efK');
+    const efKError = document.getElementById('efKError');
+    const esK = document.getElementById('esK');
+    const esKError = document.getElementById('esKError');
+    const snK = document.getElementById('snK');
+    const snKError = document.getElementById('snKError');
+
+    // Results
+    const nResult = document.getElementById('nResult');
+    const pResult = document.getElementById('pResult');
+    const kResult = document.getElementById('kResult');
+
+    // Basic front-end validations
+    function validateInputs() {
+      let valid = true;
+
+      // A function to show/hide error
+      const showError = (input, errorEl, condition) => {
+        if (condition) {
+          errorEl.classList.add('show');
+          valid = false;
+        } else {
+          errorEl.classList.remove('show');
+        }
+      };
+
+      // Typical yield range check (example: 1–300)
+      const yVal = Number(yieldInput.value);
+      showError(yieldInput, yieldError, (yVal <= 0 || yVal > 300));
+
+      // N checks
+      const nrNVal = Number(nrN.value);
+      showError(nrN, nrNError, (nrNVal <= 0 || nrNVal > 5));
+      const efNVal = Number(efN.value);
+      showError(efN, efNError, (efNVal < 0 || efNVal > 1));
+      const esNVal = Number(esN.value);
+      showError(esN, esNError, (esNVal < 0 || esNVal > 1));
+      const snNVal = Number(snN.value);
+      showError(snN, snNError, (snNVal < 0 || snNVal > 500)); // example soil test upper limit
+
+      // P checks
+      const nrPVal = Number(nrP.value);
+      showError(nrP, nrPError, (nrPVal <= 0 || nrPVal > 2));
+      const efPVal = Number(efP.value);
+      showError(efP, efPError, (efPVal < 0 || efPVal > 1));
+      const esPVal = Number(esP.value);
+      showError(esP, esPError, (esPVal < 0 || esPVal > 1));
+      const snPVal = Number(snP.value);
+      showError(snP, snPError, (snPVal < 0 || snPVal > 500));
+
+      // K checks
+      const nrKVal = Number(nrK.value);
+      showError(nrK, nrKError, (nrKVal <= 0 || nrKVal > 5));
+      const efKVal = Number(efK.value);
+      showError(efK, efKError, (efKVal < 0 || efKVal > 1));
+      const esKVal = Number(esK.value);
+      showError(esK, esKError, (esKVal < 0 || esKVal > 1));
+      const snKVal = Number(snK.value);
+      showError(snK, snKError, (snKVal < 0 || snKVal > 1000)); // example upper limit
+
+      return valid;
+    }
+
+    // Example formula usage (client-side for demo):
+    // F_N = (NR_N / E_fN) * Y - (E_sN / E_fN) * SN_N
+    // Similarly for P, K with their respective parameters.
+
+    function calculateFertilizer() {
+      // Convert to numeric
+      const Y = Number(yieldInput.value);
+
+      // N
+      const NR_N = Number(nrN.value);
+      const EfN = Number(efN.value);
+      const EsN = Number(esN.value);
+      const SN_N = Number(snN.value);
+      const F_N = (NR_N / EfN) * Y - (EsN / EfN) * SN_N;
+
+      // P
+      const NR_P = Number(nrP.value);
+      const EfP = Number(efP.value);
+      const EsP = Number(esP.value);
+      const SN_P = Number(snP.value);
+      const F_P = (NR_P / EfP) * Y - (EsP / EfP) * SN_P;
+
+      // K
+      const NR_K = Number(nrK.value);
+      const EfK = Number(efK.value);
+      const EsK = Number(esK.value);
+      const SN_K = Number(snK.value);
+      const F_K = (NR_K / EfK) * Y - (EsK / EfK) * SN_K;
+
+      // Display results
+      nResult.textContent = F_N.toFixed(2);
+      pResult.textContent = F_P.toFixed(2);
+      kResult.textContent = F_K.toFixed(2);
+      resultsBox.style.display = 'block';
+    }
+
+    calculateBtn.addEventListener('click', () => {
+      // Validate inputs before calculation
+      if (!validateInputs()) {
+        return;
+      }
+      // In production, you'd do a backend call here. We'll do client-side for demonstration.
+      calculateFertilizer();
+    });
+
+    // Optionally hide results on reset
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      resultsBox.style.display = 'none';
+    });
+  </script>
+</body>
+</html>
